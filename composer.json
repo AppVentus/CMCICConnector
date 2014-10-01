@@ -1,0 +1,17 @@
+{
+    "name": "appventus/cmcic-connector",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Paul Andrieux",
+            "email": "paul@appventus.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+
+    },
+    "autoload": {
+        "psr-0": { "Av/CMCICConnector": "" }
+    },
+}
