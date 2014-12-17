@@ -2,12 +2,13 @@
 
 namespace Av\CMCICConnector;
 
+use Av\CMCICConnector\Av\CMCICPaymentBundle\Entity\Bill;
+use Av\CMCICConnector\Entity\Card;
 use Av\CMCICConnector\Entity\CardAuthorisation;
 use Av\CMCICConnector\Entity\Transaction;
 
 class BankConnector
 {
-
     const KEY_VERSION                = 'version';
     const KEY_SOCIETY                = 'societe';
     const KEY_TPE                    = 'TPE';
@@ -49,7 +50,7 @@ class BankConnector
     /**
      * Contructeur
      *
-     * @param Array   $parameters security
+     * @param Array $parameters security
      */
     public function __construct($parameters)
     {
@@ -122,6 +123,45 @@ class BankConnector
         return $cardAuthorisation;
     }
 
+    public function createTransaction(CardAuthorisation $cardAuthorisation, Bill $bill)
+    {
+        $transaction = new Transaction();
+        $transaction->setBill($bill);
+        $transaction->setCardAuthorisation($cardAuthorisation);
+        $transaction->setAmount($bill->getValue() / 100);
+        $transaction->setCreationDate(new \DateTime());
+
+        $params = array(
+            self::KEY_VERSION                => $this->parameters['tpe']['version'],
+            self::KEY_TPE                    => $this->parameters['tpe']['tpe_number'],
+            self::KEY_DATE                   => $transaction->getCreationDate()->format('d/m/Y:H:i:s'),
+            self::KEY_ORDER_DATE             => $cardAuthorisation->getCreationDate()->format('d/m/Y'),
+            self::KEY_AMOUNT                 => ($cardAuthorisation->getAmount()) . $this->parameters['tpe']['currency'],
+            self::KEY_ORDER_AMOUNT           => ($transaction->getAmount()) . $this->parameters['tpe']['currency'],
+            self::KEY_ALLREADY_ORDER_AMOUNT  => '0' . $this->parameters['tpe']['currency'],
+            self::KEY_REMAINING_ORDER_AMOUNT => ($cardAuthorisation->getAmount() - $transaction->getAmount()) . $this->parameters['tpe']['currency'],
+            self::KEY_REFERENCE              => $cardAuthorisation->getReference(),
+            self::KEY_COMMENT                => '',
+            self::KEY_LANGUAGE               => $this->parameters['tpe']['language'],
+            self::KEY_SOCIETY                => 'EMU_' . $this->parameters['tpe']['society'],
+        );
+
+        $params[self::KEY_MAC] = $this->certifyTransaction($params, $this->parameters['tpe']['secret']);
+
+        $result = $this->parseTextResponse($this->request($params, $this->parameters['tpe']['api_url_capture']));
+
+        error_log(print_r($result, true));
+
+        if ($result['status'] == 200) {
+            $transaction->setStatus($this->getStatusForLabel($result['content']['lib']));
+        } else {
+            $transaction->setComment($result['content']);
+            $transaction->setStatus('error_' . $result['status']);
+        }
+
+        return $transaction;
+    }
+
     private function certifyCardAuthorisation($params, $secret)
     {
         $data = '';
@@ -158,7 +198,6 @@ class BankConnector
 
         return strtolower(hash_hmac('sha1', $data, pack('H*', $secret)));
     }
-
 
     private function certifyTransaction($params, $secret)
     {
@@ -215,6 +254,7 @@ class BankConnector
         // Close connection
         curl_close($request);
         error_log($content);
+
         return array('content' => $content, 'status' => $status);
     }
 
@@ -362,68 +402,6 @@ class BankConnector
         }
 
         return $status;
-    }
-
-    public function recoverBill(Bill $bill)
-    {
-        $charged = $bill->getCharged();
-
-        $er = $this->em->getRepository('GuestAppBundle:CardAuthorisation');
-
-        try {
-            $cardAuthorisation = $er->findActiveCardAuthorisation($charged);
-        } catch (\Exception $e) {
-            $cardAuthorisation = false;
-        }
-
-
-        if ($cardAuthorisation) {
-            return $this->createTransaction($cardAuthorisation, $bill);
-        } else {
-            return false;
-        }
-    }
-
-    public function createTransaction(CardAuthorisation $cardAuthorisation, $bill)
-    {
-        $transaction = new $this->parameters['classes']['transaction']();
-        $transaction->setBill($bill);
-        $transaction->setCardAuthorisation($cardAuthorisation);
-        $transaction->setAmount($bill->getValue() / 100);
-        $transaction->setCreationDate(new \DateTime());
-
-        $params = array(
-            self::KEY_VERSION                => $this->parameters['tpe']['version'],
-            self::KEY_TPE                    => $this->parameters['tpe']['tpe_number'],
-            self::KEY_DATE                   => $transaction->getCreationDate()->format('d/m/Y:H:i:s'),
-            self::KEY_ORDER_DATE             => $cardAuthorisation->getCreationDate()->format('d/m/Y'),
-            self::KEY_AMOUNT                 => ($cardAuthorisation->getAmount()) . $this->parameters['tpe']['currency'],
-            self::KEY_ORDER_AMOUNT           => ($transaction->getAmount()) . $this->parameters['tpe']['currency'],
-            self::KEY_ALLREADY_ORDER_AMOUNT  => '0' . $this->parameters['tpe']['currency'],
-            self::KEY_REMAINING_ORDER_AMOUNT => ($cardAuthorisation->getAmount() - $transaction->getAmount()) . $this->parameters['tpe']['currency'],
-            self::KEY_REFERENCE              => $cardAuthorisation->getReference(),
-            self::KEY_COMMENT                => '',
-            self::KEY_LANGUAGE               => $this->parameters['tpe']['language'],
-            self::KEY_SOCIETY                => 'EMU_' . $this->parameters['tpe']['society'],
-        );
-
-        $params[self::KEY_MAC] = $this->certifyTransaction($params, $this->parameters['tpe']['secret']);
-
-        $result = $this->parseTextResponse($this->request($params, $this->parameters['tpe']['api_url_capture']));
-
-        error_log(print_r($result, true));
-
-        if ($result['status'] == 200) {
-            $transaction->setStatus($this->getStatusForLabel($result['content']['lib']));
-        } else {
-            $transaction->setComment($result['content']);
-            $transaction->setStatus('error_' . $result['status']);
-        }
-
-        $this->em->persist($transaction);
-        $this->em->flush();
-
-        return $transaction;
     }
 
     private function parseTextResponse($response)

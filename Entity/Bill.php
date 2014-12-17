@@ -1,6 +1,6 @@
 <?php
 
-namespace Av\CMCICConnector\Entity;
+namespace Av\CMCICConnector\Av\CMCICPaymentBundle\Entity;
 
 /**
  * Bill
@@ -154,29 +154,5 @@ class Bill
     public function getTransactions()
     {
         return $this->transactions;
-    }
-
-    /**
-     * Set charged
-     *
-     * @param \Guest\AppBundle\Entity\Company $charged
-     *
-     * @return Bill
-     */
-    public function setCharged($charged)
-    {
-        $this->charged = $charged;
-
-        return $this;
-    }
-
-    /**
-     * Get charged
-     *
-     * @return \Guest\AppBundle\Entity\Company
-     */
-    public function getCharged()
-    {
-        return $this->charged;
     }
 }

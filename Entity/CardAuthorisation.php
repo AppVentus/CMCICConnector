@@ -45,7 +45,6 @@ class CardAuthorisation
     protected $comment;
     protected $lastUpdate;
     protected $transactions;
-    protected $charged;
 
     public function __construct()
     {
@@ -302,30 +301,6 @@ class CardAuthorisation
     public function getTransactions()
     {
         return $this->transactions;
-    }
-
-    /**
-     * Set charged
-     *
-     * @param \Guest\AppBundle\Entity\Company $charged
-     *
-     * @return Bill
-     */
-    public function setCharged($charged)
-    {
-        $this->charged = $charged;
-
-        return $this;
-    }
-
-    /**
-     * Get charged
-     *
-     * @return \Guest\AppBundle\Entity\Company
-     */
-    public function getCharged()
-    {
-        return $this->charged;
     }
 
     /**
