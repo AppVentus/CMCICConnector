@@ -1,5 +1,4 @@
 <?php
-
 namespace Av\CMCICConnector;
 
 use Av\CMCICConnector\Av\CMCICPaymentBundle\Entity\Bill;
@@ -150,8 +149,6 @@ class BankConnector
 
         $result = $this->parseTextResponse($this->request($params, $this->parameters['tpe']['api_url_capture']));
 
-        error_log(print_r($result, true));
-
         if ($result['status'] == 200) {
             $transaction->setStatus($this->getStatusForLabel($result['content']['lib']));
         } else {
@@ -234,7 +231,6 @@ class BankConnector
 
     private function request($params, $url)
     {
-        error_log(http_build_query($params));
         $request = curl_init();
 
         curl_setopt_array($request, array(
@@ -244,7 +240,7 @@ class BankConnector
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HEADER         => false,
             CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_CAINFO         => '/certificates/cacert.pem',
+            CURLOPT_CAINFO         => $this->parameters['tpe']['certificate'],
         ));
 
         // Execute request and get response and status code
@@ -253,7 +249,6 @@ class BankConnector
 
         // Close connection
         curl_close($request);
-        error_log($content);
 
         return array('content' => $content, 'status' => $status);
     }
