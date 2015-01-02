@@ -1,6 +1,6 @@
 <?php
 
-namespace Av\CMCICConnector\Av\CMCICPaymentBundle\Entity;
+namespace Av\CMCICConnector\Entity;
 
 /**
  * Bill
