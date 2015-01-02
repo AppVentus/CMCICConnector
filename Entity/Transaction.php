@@ -33,6 +33,7 @@ class Transaction
     protected $creationDate;
     protected $bill;
     protected $cardAuthorisation;
+    protected $comment;
 
     public function __construct()
     {
@@ -157,5 +158,29 @@ class Transaction
     public function getCardAuthorisation()
     {
         return $this->cardAuthorisation;
+    }
+
+    /**
+     * Get comment
+     *
+     * @return string
+     */
+    public function getComment()
+    {
+        return $this->comment;
+    }
+
+    /**
+     * Set comment
+     *
+     * @param string $comment
+     *
+     * @return $this
+     */
+    public function setComment($comment)
+    {
+        $this->comment = $comment;
+
+        return $this;
     }
 }
