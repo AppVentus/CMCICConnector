@@ -147,11 +147,13 @@ class BankConnector
 
         $params[self::KEY_MAC] = $this->certifyTransaction($params, $this->parameters['tpe']['secret']);
 
-        Mage::log(sprintf("cybermut request data sent :%s \n", $params));
+        echo "\n--- cybermut request data sent :\n";
+        var_dump($params);
 
         $result = $this->parseTextResponse($this->request($params, $this->parameters['tpe']['api_url_capture']));
 
-        Mage::log(sprintf("cybermut result :%s \n", $result));
+        echo "\n--- cybermut response :\n";
+        var_dump($result);
         if ($result['status'] == 200) {
             $transaction->setStatus($this->getStatusForLabel($result['content']['lib']));
         } else {
