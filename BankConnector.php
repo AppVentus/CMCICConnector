@@ -1,7 +1,7 @@
 <?php
 namespace Av\CMCICConnector;
 
-use Av\CMCICConnector\Av\CMCICPaymentBundle\Entity\Bill;
+use Av\CMCICConnector\Entity\Bill;
 use Av\CMCICConnector\Entity\Card;
 use Av\CMCICConnector\Entity\CardAuthorisation;
 use Av\CMCICConnector\Entity\Transaction;
