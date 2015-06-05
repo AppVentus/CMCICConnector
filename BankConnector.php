@@ -142,7 +142,7 @@ class BankConnector
             self::KEY_REFERENCE              => $cardAuthorisation->getReference(),
             self::KEY_COMMENT                => '',
             self::KEY_LANGUAGE               => $this->parameters['tpe']['language'],
-            self::KEY_SOCIETY                => 'EMU_' . $this->parameters['tpe']['society'],
+            self::KEY_SOCIETY                => $this->parameters['tpe']['society'],
         );
 
         $params[self::KEY_MAC] = $this->certifyTransaction($params, $this->parameters['tpe']['secret']);
